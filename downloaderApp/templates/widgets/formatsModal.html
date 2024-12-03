@@ -1,0 +1,47 @@
+{% load static %}
+
+
+
+<div class="modalSelect" id="modalSelect">
+    <div class="modalContent">
+        <button class="closeModal" id="closeModal">&times;</button>
+        <h2>Select Format to Download</h2>
+        <table id="formatTable">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Resolution / Quality</th>
+                    <th>Format</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Форматы будут загружены сюда через JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    function openModal() {
+        const modal = document.getElementById('modalSelect');
+        const overlay = document.getElementById('overlay');
+
+        modal.style.display = 'block';
+        overlay.style.display = 'block';
+
+        overlay.addEventListener('click', closeModal);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('modalSelect');
+        const overlay = document.getElementById('overlay');
+
+        modal.style.display = 'none';
+        overlay.style.display = 'none';
+
+        overlay.removeEventListener('click', closeModal);
+    }
+
+    // Добавляем обработчик для кнопки закрытия
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+</script>

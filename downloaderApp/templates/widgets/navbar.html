@@ -1,0 +1,26 @@
+{% block content %}
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://kit.fontawesome.com/ba99d1b9b2.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'css/toolbar.css' %}">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body class="this-page">
+    <div class="pc-view">
+        <div class="toolbar large">
+            <div class="toolbar-icons-container">
+                <a href="{% url "homepage" %}" class="link"> Homepage </a>
+                <a href="{% url "audio_homepage" %}" class="link">Audio</a>
+                <a href="{% url "video_homepage" %}" class="link">Video</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+{% endblock %}

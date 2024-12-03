@@ -1,0 +1,50 @@
+.toolbar {
+    background-color: #cbcbcb;
+    padding: 10px;
+    display: flex;
+    width: 100vw;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    transition: height 0.2s ease-in-out;
+}
+.toolbar .link {
+    font-family: 'Poppins', Verdana, sans-serif;
+    cursor: pointer;
+    color: #323232;
+    text-decoration: none;
+    padding: 5px;
+    position: relative;
+    font-size: 22px;
+    transition: all 0.3s;
+}
+.link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 5px;
+    width: 0;
+    height: 2px;
+    background-color: #323232;
+    transition: width 0.3s ease;
+}
+.link:hover::after {
+    width: 100%;
+}
+
+.link:hover {
+    opacity: 60%;
+}
+.toolbar-icons-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.pageContainer{
+    margin-top: 80px;
+}

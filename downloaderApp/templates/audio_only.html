@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+{% load widget_tweaks %}
+{% block content %}
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audio Downloader</title>
+    <link rel="stylesheet" href="{% static "css/homepage.css" %}">
+    <script src="{% static "js/download_video.js" %}"></script>
+</head>
+<body>
+    {% include "widgets/navbar.html" %}
+    <div class="pageContainer">
+        <h1>Audio Downloader</h1>
+        <form id="urlForm" method="post" action="#">
+            {% csrf_token %}
+            <div class="urlInputContainer">
+                <label for="url">Enter video URL:</label>
+                <input type="text" id="url" name="url" required>
+                <button type="button" id="findVideo" class="getFormatsBtn">Get Formats</button>
+            </div>
+        </form>
+
+    </div>
+
+    {% include "widgets/formatsModal.html" %}
+    {% include "widgets/overlay.html" %}
+    <div class="overlay" id="overlay"></div>
+</body>
+</html>
+<script>
+    // Функция для запроса форматов видео
+    let selectedAudioFormat = null; // Храним выбранный видео формат
+    document.addEventListener("DOMContentLoaded", async function () {
+        hideOverlay();
+    });
+
+    document.getElementById('findVideo').addEventListener('click', getFormats);
+    function getFormats() {
+        const url = document.getElementById("url").value;
+        const csrf_token = getCookie('csrftoken');
+        showOverlay();
+        fetch("{% url 'get_video_formats' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token
+            },
+            body: JSON.stringify({ 'url': url })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.formats) {
+                // Фильтруем только видео форматы
+                const videoFormats = data.formats.filter(format => format.type === "Audio");
+
+                if (videoFormats.length > 0) {
+                    const tableBody = document.getElementById("formatTable").getElementsByTagName("tbody")[0];
+                    tableBody.innerHTML = "";
+
+                    // Заполняем таблицу видео форматами
+                    videoFormats.forEach(format => {
+                        if( format.format !== "mhtml" && format.format !== "webm" && format.format !== "mp4") {
+                            const row = tableBody.insertRow();
+                            row.insertCell(0).innerText = format.type;
+                            row.insertCell(1).innerText = format.quality;
+                            row.insertCell(2).innerText = format.format;
+                            const actionCell = row.insertCell(3);
+                            const selectButton = document.createElement("button");
+                            selectButton.classList.add('selectButton');
+                            selectButton.innerHTML = "Select";
+                            selectButton.onclick = function () {
+                                selectedAudioFormat = format.format_id; // Сохраняем выбранный видео формат
+                                downloadVideoWithAudio(selectedAudioFormat, "{% url "download_video_with_format" %}");
+                            };
+                            actionCell.appendChild(selectButton);
+                        }
+                    });
+                    openModal();
+                } else {
+                    alert("No video formats available");
+                }
+            } else {
+                alert('No formats available');
+            }
+        })
+        .catch(error => console.error('Error:', error))
+        .finally(() => hideOverlay());
+
+    }
+
+    function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+       }
+</script>
+{% endblock %}

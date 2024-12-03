@@ -1,0 +1,186 @@
+{% load widget_tweaks %}
+{% block content %}
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Full video Downloader</title>
+    <link rel="stylesheet" href="{% static "css/homepage.css" %}">
+</head>
+<body>
+    {% include "widgets/navbar.html" %}
+    <div class="pageContainer">
+        <h1>Full Video Downloader</h1>
+        <form id="urlForm" method="post" action="#">
+            {% csrf_token %}
+            <div class="urlInputContainer">
+                <label for="url">Enter video URL:</label>
+                <input type="text" id="url" name="url" required>
+                <button type="button" class="getFormatsBtn" onclick="getFormats()">Get Formats</button>
+            </div>
+        </form>
+        <h2>Select Format to Download</h2>
+        <table id="formatTable">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Resolution / Quality</th>
+                    <th>Format</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Форматы будут загружены сюда через JS -->
+            </tbody>
+        </table>
+
+    </div>
+
+</body>
+</html>
+<script>
+    // Функция для запроса форматов видео
+    let selectedVideoFormat = null; // Храним выбранный видео формат
+
+function getFormats() {
+    const url = document.getElementById("url").value;
+    const csrf_token = getCookie('csrftoken');
+
+    fetch("{% url 'get_video_formats' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token
+        },
+        body: JSON.stringify({ 'url': url })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.formats) {
+            // Фильтруем только видео форматы
+            const videoFormats = data.formats.filter(format => format.type === "Video");
+
+            if (videoFormats.length > 0) {
+                const tableBody = document.getElementById("formatTable").getElementsByTagName("tbody")[0];
+                tableBody.innerHTML = "";
+
+                // Заполняем таблицу видео форматами
+                videoFormats.forEach(format => {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).innerText = format.type;
+                    row.insertCell(1).innerText = format.quality;
+                    row.insertCell(2).innerText = format.format;
+                    const actionCell = row.insertCell(3);
+                    const selectButton = document.createElement("button");
+                    selectButton.innerHTML = "Select";
+                    selectButton.onclick = function () {
+                        selectedVideoFormat = format.format_id; // Сохраняем выбранный видео формат
+                        getAudioFormats(); // Открываем окно выбора аудио форматов
+                    };
+                    actionCell.appendChild(selectButton);
+                });
+            } else {
+                alert("No video formats available");
+            }
+        } else {
+            alert('No formats available');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function getAudioFormats() {
+    const url = document.getElementById("url").value;
+    const csrf_token = getCookie('csrftoken');
+
+    fetch("{% url 'get_video_formats' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token
+        },
+        body: JSON.stringify({ 'url': url })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.formats) {
+            // Фильтруем только аудио форматы
+            const audioFormats = data.formats.filter(format => format.type === "Audio");
+
+            if (audioFormats.length > 0) {
+                const tableBody = document.getElementById("formatTable").getElementsByTagName("tbody")[0];
+                tableBody.innerHTML = "";
+
+                // Заполняем таблицу аудио форматами
+                audioFormats.forEach(format => {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).innerText = format.type;
+                    row.insertCell(1).innerText = format.quality;
+                    row.insertCell(2).innerText = format.format;
+                    const actionCell = row.insertCell(3);
+                    const selectButton = document.createElement("button");
+                    selectButton.innerHTML = "Select";
+                    selectButton.onclick = function () {
+                        const selectedAudioFormat = format.format_id; // Сохраняем выбранный аудио формат
+                        downloadVideoWithAudio(selectedVideoFormat); // Скачиваем видео с аудио
+                    };
+                    actionCell.appendChild(selectButton);
+                });
+            } else {
+                alert("No audio formats available");
+            }
+        } else {
+            alert('No formats available');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function downloadVideoWithAudio(audioFormat) {
+    const url = document.getElementById("url").value;
+    const csrf_token = getCookie('csrftoken');
+
+    fetch("{% url 'download_video' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token
+        },
+        body: JSON.stringify({
+            'url': url,
+            'video_format': selectedVideoFormat,
+            'audio_format': audioFormat
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        } else {
+            throw new Error("Failed to download video with audio");
+        }
+    })
+    .then(blob => {
+        const downloadLink = document.createElement("a");
+        downloadLink.href = window.URL.createObjectURL(blob);
+        downloadLink.download = "video_with_audio.mp4";
+        downloadLink.click();
+    })
+    .catch(error => console.error("Error:", error));
+}
+
+    function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+       }
+</script>
+{% endblock %}
